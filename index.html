@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>hello ... i have mongo DB</h1>
+    <form action="/addProduct" method="post">
+        <input type="text" placeholder="name" name="name">
+        <input type="text" placeholder="price" name="price">
+        <input type="text" placeholder="quantity" name="quantity">
+        <button type="submit">Add Product</button>
+    </form>
+    <div id="products">
+
+    </div>
+    <div id="update">
+
+    </div>
+    <script>
+        //show all product
+        function loadAllProducts() {
+            fetch('/products')
+                .then(res => res.json())
+                .then(products => {
+                    console.log(products);
+                    const container = document.getElementById('products');
+                    container.innerHTML = '';
+                    products.forEach(pd => {
+                        const item = document.createElement('p');
+                        item.innerHTML = `<strong>${pd.name}</strong> Price: <strong>${pd.price}</strong> Quantity: <strong>${pd.quantity}</strong>
+                        <button onclick="loadProduct('${pd._id}')">Update</button>    
+                        <button onclick="deleteProduct(event, '${pd._id}')">Delete</button>
+                        `;
+                        container.appendChild(item);
+                    })
+                })
+        }
+        loadAllProducts();
+
+        //jake update korbe tar field gula show korbe
+        function loadProduct(id) {
+            fetch(`/product/${id}`, {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const update = document.getElementById('update');
+                    update.innerHTML = `
+                        <h3>Update: ${data._id}</h3>
+                        Name: <input type="text" value="${data.name}" id="name">
+                        <br/>
+                        Price: <input type="text" value="${data.price}" id="price">
+                        <br/>
+                        Quantity: <input type="text" value="${data.quantity}" id="quantity">
+                        <br/>
+                        <button type="submit" onclick="updateProduct('${data._id}')">Submit</button>
+                    `;
+                })
+        }
+
+        //update product
+        function updateProduct(id) {
+            console.log('hit inside');
+            const name = document.getElementById('name').value;
+            const price = document.getElementById('price').value;
+            const quantity = document.getElementById('quantity').value;
+            const product = { id, name, price, quantity };
+            console.log(product);
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loadAllProducts();
+                    const update = document.getElementById('update');
+                    update.innerHTML = '';
+                })
+        }
+
+        // delete product
+        function deleteProduct(event, id) {
+            console.log(event.target.parentNode);
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        event.target.parentNode.style.display = 'none';
+                    }
+                })
+        }
+    </script>
+</body>
+
+</html>
